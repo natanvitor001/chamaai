@@ -25,13 +25,11 @@ export default function RootLayout() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" />
         <Stack.Screen name="cadastro" />
         <Stack.Screen name="forgot-password" />
         <Stack.Screen name="email-verification" />
-        <Stack.Screen name="(cliente)" />
-        <Stack.Screen name="(prestador)" />
         <Stack.Screen name="chat" />
         <Stack.Screen name="new-service-request" />
         <Stack.Screen name="loja" />
