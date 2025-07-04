@@ -33,7 +33,13 @@ export default function RootLayout() {
         <Stack.Screen name="forgot-password" />
         <Stack.Screen name="email-verification" />
         <Stack.Screen name="chat" />
-        <Stack.Screen name="new-service-request" />
+        <Stack.Screen 
+          name="new-service-request" 
+          options={{
+            presentation: 'modal',
+            headerShown: false,
+          }}
+        />
         <Stack.Screen name="loja" />
         <Stack.Screen name="+not-found" />
       </Stack>

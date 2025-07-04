@@ -11,9 +11,12 @@ import {
   SafeAreaView,
   StatusBar,
   RefreshControl,
+  Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
-import { Search, MapPin, Star, Clock, ArrowRight } from 'lucide-react-native';
+import { Search, MapPin, Star, Clock, ArrowRight, Bell, Menu, Heart } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 const COLORS = {
   primary: '#1A237E',
@@ -28,6 +31,7 @@ const COLORS = {
   gray: '#64748B',
   grayLight: '#E2E8F0',
   dark: '#1E293B',
+  gradient: ['#1A237E', '#3F51B5'],
 };
 
 interface Service {
@@ -39,6 +43,7 @@ interface Service {
   distance: string;
   image: string;
   isAvailable: boolean;
+  completedJobs: number;
 }
 
 interface ServiceCategory {
@@ -46,15 +51,52 @@ interface ServiceCategory {
   name: string;
   icon: string;
   color: string;
+  gradient: string[];
 }
 
 const serviceCategories: ServiceCategory[] = [
-  { id: '1', name: 'Limpeza', icon: '🧹', color: '#E3F2FD' },
-  { id: '2', name: 'Elétrica', icon: '⚡', color: '#FFF3E0' },
-  { id: '3', name: 'Encanamento', icon: '🔧', color: '#E8F5E8' },
-  { id: '4', name: 'Pintura', icon: '🎨', color: '#FCE4EC' },
-  { id: '5', name: 'Jardinagem', icon: '🌱', color: '#F1F8E9' },
-  { id: '6', name: 'Marcenaria', icon: '🪚', color: '#FFF8E1' },
+  { 
+    id: '1', 
+    name: 'Limpeza', 
+    icon: '🧹', 
+    color: '#E3F2FD',
+    gradient: ['#E3F2FD', '#BBDEFB']
+  },
+  { 
+    id: '2', 
+    name: 'Elétrica', 
+    icon: '⚡', 
+    color: '#FFF3E0',
+    gradient: ['#FFF3E0', '#FFE0B2']
+  },
+  { 
+    id: '3', 
+    name: 'Encanamento', 
+    icon: '🔧', 
+    color: '#E8F5E8',
+    gradient: ['#E8F5E8', '#C8E6C9']
+  },
+  { 
+    id: '4', 
+    name: 'Pintura', 
+    icon: '🎨', 
+    color: '#FCE4EC',
+    gradient: ['#FCE4EC', '#F8BBD9']
+  },
+  { 
+    id: '5', 
+    name: 'Jardinagem', 
+    icon: '🌱', 
+    color: '#F1F8E9',
+    gradient: ['#F1F8E9', '#DCEDC8']
+  },
+  { 
+    id: '6', 
+    name: 'Marcenaria', 
+    icon: '🪚', 
+    color: '#FFF8E1',
+    gradient: ['#FFF8E1', '#FFECB3']
+  },
 ];
 
 const featuredServices: Service[] = [
@@ -67,6 +109,7 @@ const featuredServices: Service[] = [
     distance: '2.3 km',
     image: 'https://images.pexels.com/photos/3768911/pexels-photo-3768911.jpeg?auto=compress&cs=tinysrgb&w=400',
     isAvailable: true,
+    completedJobs: 127,
   },
   {
     id: '2',
@@ -77,6 +120,7 @@ const featuredServices: Service[] = [
     distance: '1.8 km',
     image: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg?auto=compress&cs=tinysrgb&w=400',
     isAvailable: true,
+    completedJobs: 89,
   },
   {
     id: '3',
@@ -87,6 +131,7 @@ const featuredServices: Service[] = [
     distance: '3.1 km',
     image: 'https://images.pexels.com/photos/3760263/pexels-photo-3760263.jpeg?auto=compress&cs=tinysrgb&w=400',
     isAvailable: false,
+    completedJobs: 156,
   },
 ];
 
@@ -103,7 +148,6 @@ export default function HomeScreen() {
   }, []);
 
   const handleServicePress = (service: Service) => {
-    // Navigate to service details or chat
     router.push('/chat');
   };
 
@@ -116,9 +160,11 @@ export default function HomeScreen() {
       key={category.id}
       style={[styles.categoryCard, { backgroundColor: category.color }]}
       onPress={() => handleCategoryPress(category)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      <Text style={styles.categoryIcon}>{category.icon}</Text>
+      <View style={styles.categoryIconContainer}>
+        <Text style={styles.categoryIcon}>{category.icon}</Text>
+      </View>
       <Text style={styles.categoryName}>{category.name}</Text>
     </TouchableOpacity>
   );
@@ -128,14 +174,14 @@ export default function HomeScreen() {
       key={service.id}
       style={styles.serviceCard}
       onPress={() => handleServicePress(service)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
       <Image source={{ uri: service.image }} style={styles.serviceImage} />
-      <View style={styles.serviceInfo}>
+      <View style={styles.serviceOverlay}>
         <View style={styles.serviceHeader}>
           <Text style={styles.serviceName}>{service.name}</Text>
           <View style={styles.ratingContainer}>
-            <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
+            <Star size={12} color={COLORS.warning} fill={COLORS.warning} />
             <Text style={styles.rating}>{service.rating}</Text>
           </View>
         </View>
@@ -144,7 +190,7 @@ export default function HomeScreen() {
           <View style={styles.priceDistance}>
             <Text style={styles.price}>{service.price}</Text>
             <View style={styles.distanceContainer}>
-              <MapPin size={12} color={COLORS.gray} />
+              <MapPin size={10} color={COLORS.white} />
               <Text style={styles.distance}>{service.distance}</Text>
             </View>
           </View>
@@ -172,12 +218,17 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>Olá, {userName}! 👋</Text>
             <Text style={styles.subtitle}>O que você precisa hoje?</Text>
           </View>
-          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/profile')}>
-            <Image 
-              source={{ uri: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100' }}
-              style={styles.profileImage}
-            />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.headerAction}>
+              <Bell size={24} color={COLORS.dark} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.profileButton}>
+              <Image 
+                source={{ uri: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100' }}
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         
         {/* Search Bar */}
@@ -207,6 +258,7 @@ export default function HomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.categoriesContainer}
+            contentContainerStyle={styles.categoriesContent}
           >
             {serviceCategories.map(renderServiceCategory)}
           </ScrollView>
@@ -234,8 +286,32 @@ export default function HomeScreen() {
               <Text style={styles.seeAllText}>Ver todos</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.servicesContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.servicesContainer}
+            contentContainerStyle={styles.servicesContent}
+          >
             {featuredServices.map(renderFeaturedService)}
+          </ScrollView>
+        </View>
+
+        {/* Stats Section */}
+        <View style={styles.statsSection}>
+          <Text style={styles.sectionTitle}>Estatísticas</Text>
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>1.2k+</Text>
+              <Text style={styles.statLabel}>Profissionais</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>5k+</Text>
+              <Text style={styles.statLabel}>Serviços</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>4.8</Text>
+              <Text style={styles.statLabel}>Avaliação</Text>
+            </View>
           </View>
         </View>
 
@@ -249,6 +325,9 @@ export default function HomeScreen() {
             <Text style={styles.activitySubtext}>
               Comece solicitando um serviço!
             </Text>
+            <TouchableOpacity style={styles.activityButton}>
+              <Text style={styles.activityButtonText}>Solicitar Serviço</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -268,6 +347,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.grayLight,
+    elevation: 4,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   headerContent: {
     flexDirection: 'row',
@@ -288,6 +372,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.gray,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerAction: {
+    padding: 8,
+  },
   profileButton: {
     width: 50,
     height: 50,
@@ -302,7 +394,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.light,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 16,
     height: 50,
   },
@@ -342,22 +434,27 @@ const styles = StyleSheet.create({
   categoriesContainer: {
     paddingLeft: 20,
   },
+  categoriesContent: {
+    paddingRight: 20,
+  },
   categoryCard: {
-    width: 80,
-    height: 80,
-    borderRadius: 16,
+    width: 90,
+    height: 90,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-    elevation: 2,
+    marginRight: 16,
+    elevation: 3,
     shadowColor: COLORS.dark,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  categoryIconContainer: {
+    marginBottom: 8,
+  },
   categoryIcon: {
-    fontSize: 24,
-    marginBottom: 4,
+    fontSize: 28,
   },
   categoryName: {
     fontSize: 12,
@@ -368,10 +465,10 @@ const styles = StyleSheet.create({
   emergencyButton: {
     marginHorizontal: 20,
     backgroundColor: COLORS.danger,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 32,
-    elevation: 4,
+    elevation: 6,
     shadowColor: COLORS.danger,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -405,25 +502,33 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   servicesContainer: {
-    paddingHorizontal: 20,
+    paddingLeft: 20,
+  },
+  servicesContent: {
+    paddingRight: 20,
   },
   serviceCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    marginBottom: 16,
-    elevation: 3,
+    width: width * 0.7,
+    height: 200,
+    borderRadius: 20,
+    marginRight: 16,
+    overflow: 'hidden',
+    elevation: 4,
     shadowColor: COLORS.dark,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    overflow: 'hidden',
   },
   serviceImage: {
     width: '100%',
-    height: 120,
+    height: '100%',
+    position: 'absolute',
   },
-  serviceInfo: {
+  serviceOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     padding: 16,
+    justifyContent: 'flex-end',
   },
   serviceHeader: {
     flexDirection: 'row',
@@ -434,22 +539,27 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.dark,
+    color: COLORS.white,
     flex: 1,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   rating: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
-    color: COLORS.dark,
+    color: COLORS.white,
     marginLeft: 4,
   },
   serviceCategory: {
     fontSize: 14,
-    color: COLORS.gray,
+    color: COLORS.white,
+    opacity: 0.9,
     marginBottom: 12,
   },
   serviceFooter: {
@@ -463,7 +573,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.white,
     marginBottom: 4,
   },
   distanceContainer: {
@@ -472,8 +582,9 @@ const styles = StyleSheet.create({
   },
   distance: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: COLORS.white,
     marginLeft: 4,
+    opacity: 0.9,
   },
   availabilityBadge: {
     paddingHorizontal: 12,
@@ -485,11 +596,43 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.white,
   },
+  statsSection: {
+    marginHorizontal: 20,
+    marginBottom: 32,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: COLORS.white,
+    padding: 20,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginHorizontal: 4,
+    elevation: 2,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: COLORS.gray,
+    textAlign: 'center',
+  },
   activityCard: {
     backgroundColor: COLORS.white,
     marginHorizontal: 20,
     padding: 24,
-    borderRadius: 16,
+    borderRadius: 20,
     alignItems: 'center',
     elevation: 2,
     shadowColor: COLORS.dark,
@@ -508,5 +651,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.gray,
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  activityButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  activityButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.white,
   },
 });

@@ -9,9 +9,13 @@ import {
   TextInput,
   SafeAreaView,
   StatusBar,
+  FlatList,
+  Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
-import { Search, Filter, MapPin, Star, Clock } from 'lucide-react-native';
+import { Search, Filter, MapPin, Star, Clock, Heart } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 const COLORS = {
   primary: '#1A237E',
@@ -38,6 +42,7 @@ interface Service {
   image: string;
   isAvailable: boolean;
   completedJobs: number;
+  isFavorite: boolean;
 }
 
 const services: Service[] = [
@@ -51,6 +56,7 @@ const services: Service[] = [
     image: 'https://images.pexels.com/photos/3768911/pexels-photo-3768911.jpeg?auto=compress&cs=tinysrgb&w=400',
     isAvailable: true,
     completedJobs: 127,
+    isFavorite: false,
   },
   {
     id: '2',
@@ -62,6 +68,7 @@ const services: Service[] = [
     image: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg?auto=compress&cs=tinysrgb&w=400',
     isAvailable: true,
     completedJobs: 89,
+    isFavorite: true,
   },
   {
     id: '3',
@@ -73,6 +80,7 @@ const services: Service[] = [
     image: 'https://images.pexels.com/photos/3760263/pexels-photo-3760263.jpeg?auto=compress&cs=tinysrgb&w=400',
     isAvailable: false,
     completedJobs: 156,
+    isFavorite: false,
   },
   {
     id: '4',
@@ -84,6 +92,7 @@ const services: Service[] = [
     image: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=400',
     isAvailable: true,
     completedJobs: 73,
+    isFavorite: false,
   },
   {
     id: '5',
@@ -95,6 +104,19 @@ const services: Service[] = [
     image: 'https://images.pexels.com/photos/3760067/pexels-photo-3760067.jpeg?auto=compress&cs=tinysrgb&w=400',
     isAvailable: true,
     completedJobs: 94,
+    isFavorite: true,
+  },
+  {
+    id: '6',
+    name: 'Roberto Silva',
+    category: 'Marceneiro',
+    rating: 4.5,
+    price: 'R$ 110/dia',
+    distance: '5.1 km',
+    image: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg?auto=compress&cs=tinysrgb&w=400',
+    isAvailable: true,
+    completedJobs: 62,
+    isFavorite: false,
   },
 ];
 
@@ -112,6 +134,7 @@ export default function ServicesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [filteredServices, setFilteredServices] = useState(services);
+  const [favorites, setFavorites] = useState<string[]>(['2', '5']);
 
   const handleCategoryPress = (category: string) => {
     setSelectedCategory(category);
@@ -129,6 +152,14 @@ export default function ServicesScreen() {
     router.push('/chat');
   };
 
+  const toggleFavorite = (serviceId: string) => {
+    setFavorites(prev => 
+      prev.includes(serviceId) 
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    );
+  };
+
   const renderCategoryButton = (category: string) => (
     <TouchableOpacity
       key={category}
@@ -137,7 +168,7 @@ export default function ServicesScreen() {
         selectedCategory === category && styles.categoryButtonActive
       ]}
       onPress={() => handleCategoryPress(category)}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
       <Text style={[
         styles.categoryButtonText,
@@ -148,52 +179,63 @@ export default function ServicesScreen() {
     </TouchableOpacity>
   );
 
-  const renderServiceCard = (service: Service) => (
+  const renderServiceCard = ({ item }: { item: Service }) => (
     <TouchableOpacity
-      key={service.id}
       style={styles.serviceCard}
-      onPress={() => handleServicePress(service)}
-      activeOpacity={0.7}
+      onPress={() => handleServicePress(item)}
+      activeOpacity={0.8}
     >
-      <Image source={{ uri: service.image }} style={styles.serviceImage} />
+      <View style={styles.serviceImageContainer}>
+        <Image source={{ uri: item.image }} style={styles.serviceImage} />
+        <TouchableOpacity 
+          style={styles.favoriteButton}
+          onPress={() => toggleFavorite(item.id)}
+        >
+          <Heart 
+            size={20} 
+            color={favorites.includes(item.id) ? COLORS.danger : COLORS.white} 
+            fill={favorites.includes(item.id) ? COLORS.danger : 'transparent'}
+          />
+        </TouchableOpacity>
+        <View style={[
+          styles.availabilityBadge,
+          { backgroundColor: item.isAvailable ? COLORS.success : COLORS.gray }
+        ]}>
+          <Text style={styles.availabilityText}>
+            {item.isAvailable ? 'Disponível' : 'Ocupado'}
+          </Text>
+        </View>
+      </View>
+      
       <View style={styles.serviceInfo}>
         <View style={styles.serviceHeader}>
-          <Text style={styles.serviceName}>{service.name}</Text>
+          <Text style={styles.serviceName}>{item.name}</Text>
           <View style={styles.ratingContainer}>
             <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-            <Text style={styles.rating}>{service.rating}</Text>
+            <Text style={styles.rating}>{item.rating}</Text>
           </View>
         </View>
         
-        <Text style={styles.serviceCategory}>{service.category}</Text>
+        <Text style={styles.serviceCategory}>{item.category}</Text>
         
         <View style={styles.serviceStats}>
           <Text style={styles.completedJobs}>
-            {service.completedJobs} trabalhos concluídos
+            {item.completedJobs} trabalhos concluídos
           </Text>
         </View>
         
         <View style={styles.serviceFooter}>
           <View style={styles.priceDistance}>
-            <Text style={styles.price}>{service.price}</Text>
+            <Text style={styles.price}>{item.price}</Text>
             <View style={styles.distanceContainer}>
               <MapPin size={12} color={COLORS.gray} />
-              <Text style={styles.distance}>{service.distance}</Text>
+              <Text style={styles.distance}>{item.distance}</Text>
             </View>
           </View>
           
-          <View style={styles.availabilityContainer}>
-            <View style={[
-              styles.availabilityDot,
-              { backgroundColor: service.isAvailable ? COLORS.success : COLORS.gray }
-            ]} />
-            <Text style={[
-              styles.availabilityText,
-              { color: service.isAvailable ? COLORS.success : COLORS.gray }
-            ]}>
-              {service.isAvailable ? 'Disponível' : 'Ocupado'}
-            </Text>
-          </View>
+          <TouchableOpacity style={styles.contactButton}>
+            <Text style={styles.contactButtonText}>Contatar</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -239,14 +281,15 @@ export default function ServicesScreen() {
       </View>
 
       {/* Services List */}
-      <ScrollView
-        style={styles.content}
+      <FlatList
+        data={filteredServices}
+        renderItem={renderServiceCard}
+        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.servicesContainer}
-      >
-        {filteredServices.map(renderServiceCard)}
-        
-        {filteredServices.length === 0 && (
+        numColumns={2}
+        columnWrapperStyle={styles.serviceRow}
+        ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateTitle}>
               Nenhum profissional encontrado
@@ -255,8 +298,8 @@ export default function ServicesScreen() {
               Tente ajustar os filtros ou buscar por outro termo
             </Text>
           </View>
-        )}
-      </ScrollView>
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -273,6 +316,11 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.grayLight,
+    elevation: 2,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   headerTitle: {
     fontSize: 28,
@@ -289,7 +337,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.light,
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 16,
     height: 50,
   },
@@ -336,26 +384,54 @@ const styles = StyleSheet.create({
   categoryButtonTextActive: {
     color: COLORS.white,
   },
-  content: {
-    flex: 1,
-  },
   servicesContainer: {
-    padding: 20,
+    padding: 16,
+  },
+  serviceRow: {
+    justifyContent: 'space-between',
   },
   serviceCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
+    borderRadius: 20,
     marginBottom: 16,
-    elevation: 3,
+    elevation: 4,
     shadowColor: COLORS.dark,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     overflow: 'hidden',
+    width: (width - 48) / 2,
+  },
+  serviceImageContainer: {
+    position: 'relative',
   },
   serviceImage: {
     width: '100%',
     height: 120,
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  availabilityBadge: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  availabilityText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.white,
   },
   serviceInfo: {
     padding: 16,
@@ -367,7 +443,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   serviceName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.dark,
     flex: 1,
@@ -375,15 +451,19 @@ const styles = StyleSheet.create({
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: COLORS.light,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   rating: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: COLORS.dark,
     marginLeft: 4,
   },
   serviceCategory: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.gray,
     marginBottom: 8,
   },
@@ -391,50 +471,48 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   completedJobs: {
-    fontSize: 12,
+    fontSize: 10,
     color: COLORS.gray,
   },
   serviceFooter: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  priceDistance: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  priceDistance: {
-    flex: 1,
-  },
   price: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: COLORS.primary,
-    marginBottom: 4,
   },
   distanceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   distance: {
-    fontSize: 12,
+    fontSize: 10,
     color: COLORS.gray,
     marginLeft: 4,
   },
-  availabilityContainer: {
-    flexDirection: 'row',
+  contactButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 8,
+    borderRadius: 8,
     alignItems: 'center',
   },
-  availabilityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  availabilityText: {
+  contactButtonText: {
     fontSize: 12,
     fontWeight: '600',
+    color: COLORS.white,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
+    paddingHorizontal: 40,
   },
   emptyStateTitle: {
     fontSize: 18,
